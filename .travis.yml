@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t hmichaels/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run hmichaels/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t hmichaels/multi-client ./client
+    - docker build -t hmichaels/multi-nginx ./nginx
+    - docker build -t hmichaels/multi-server ./server
+    - docker build -t hmichaels/multi-worker ./worker
+    # log in to the Docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # push to Docker Hub
+    - docker push hmichaels/multi-client
+    - docker push hmichaels/multi-nginx
+    - docker push hmichaels/multi-server
+    - docker push hmichaels/multi-worker
